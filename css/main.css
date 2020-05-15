@@ -1,0 +1,275 @@
+/*! HTML5 Boilerplate v7.3.0 | MIT License | https://html5boilerplate.com/ */
+
+/* main.css 2.0.0 | MIT License | https://github.com/h5bp/main.css#readme */
+/*
+* То, что следует, является результатом большого исследования кросс-браузерного стиля.
+  * Кредит оставлен на линии и большое спасибо Николасу Галлахеру, Джонатану Нилу,
+  * Kroc Camen, сообщество разработчиков и команда H5BP.
+ */
+
+/* ==========================================================================
+   Базовые стили: упрямые значения по умолчанию
+   ========================================================================== */
+
+html {
+  color: #222;
+  font-size: 1em;
+  line-height: 1.4;
+}
+
+/*
+ * Удалить тень текста в выделении выделения:
+ * https://twitter.com/miketaylr/status/12228805301
+ *
+ * Селектор с префиксом поставщика и обычный :: выбор не могут быть объединены:
+ * https://stackoverflow.com/a/16982510/7133471
+ *
+ * Настройте цвет фона в соответствии с вашим дизайном.
+ */
+
+::-moz-selection {
+  background: #b3d4fc;
+  text-shadow: none;
+}
+
+::selection {
+  background: #b3d4fc;
+  text-shadow: none;
+}
+
+/*
+ * Лучше выглядящее горизонтальное правило по умолчанию
+ */
+
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 1em 0;
+  padding: 0;
+}
+
+/*
+  * Устранить разрыв между аудио, холстом, фреймами,
+  * изображения, видео и нижняя часть их контейнеров:
+  * https://github.com/h5bp/html5-boilerplate/issues/440
+ */
+
+audio,
+canvas,
+iframe,
+img,
+svg,
+video {
+  vertical-align: middle;
+}
+
+/*
+ * Удалить стили набора полей по умолчанию.
+ */
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+ * Разрешить только вертикальное изменение размеров текстовых полей.
+ */
+
+textarea {
+  resize: vertical;
+}
+
+/* ==========================================================================
+   Запрос на обновление браузера
+   ========================================================================== */
+
+.browserupgrade {
+  margin: 0.2em 0;
+  background: #ccc;
+  color: #000;
+  padding: 0.2em 0;
+}
+
+/* ==========================================================================
+   Авторские стили
+   ========================================================================== */
+
+/* ==========================================================================
+   Вспомогательные классы
+   ========================================================================== */
+
+/*
+ * Скрыть визуально и от программ чтения с экрана
+ */
+
+.hidden {
+  display: none !important;
+}
+
+/*
+* Скрыть только визуально, но сделать это доступным для программ чтения с экрана:
+* https://snook.ca/archives/html_and_css/hiding-content-for-accessibility
+*
+* 1. Для длинного контента перевод строки не интерпретируется как пробелы и малая ширина
+*    заставляет содержимое переносить по 1 слову в строке:
+*    https://medium.com/@jessebeach/beware-smushed-off-screen-accessible-text-5952a4c2cbfe
+*/
+
+.sr-only {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+  /* 1 */
+}
+
+/*
+* Расширяет класс .sr-only, чтобы разрешить элемент
+* чтобы быть фокусируемым при навигации с помощью клавиатуры:
+* https://www.drupal.org/node/897638
+*/
+
+.sr-only.focusable:active,
+.sr-only.focusable:focus {
+  clip: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  position: static;
+  white-space: inherit;
+  width: auto;
+}
+
+/*
+* Скрыть визуально и от программ чтения с экрана, но сохранить макет
+*/
+
+.invisible {
+  visibility: hidden;
+}
+
+/*
+* Clearfix: содержит поплавки
+*
+* Для современных браузеров
+* 1. Содержимое пространства - это один из способов избежать ошибки Opera, когда
+*    Атрибут `contenteditable` включен где-либо еще в документе.
+*    Иначе это заставляет пространство появляться сверху и снизу элементов
+*    которые получают класс `clearfix`.
+* 2. Использование `table` вместо` block` необходимо только при использовании
+*    `: before`, чтобы содержать верхние поля дочерних элементов.
+*/
+
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  /* 1 */
+  display: table;
+  /* 2 */
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+/* ==========================================================================
+  ПРИМЕР Медиа-запросов для адаптивного дизайна.
+  Эти примеры переопределяют основной («сначала мобильный») стиль.
+  Изменить как требуется содержание.
+   ========================================================================== */
+
+@media only screen and (min-width: 35em) {
+  /* Корректировки стиля для видовых экранов, которые соответствуют условию */
+}
+
+@media print,
+(-webkit-min-device-pixel-ratio: 1.25),
+(min-resolution: 1.25dppx),
+(min-resolution: 120dpi) {
+  /* Настройки стиля для устройств с высоким разрешением */
+}
+
+/* ==========================================================================
+   Стили печати.
+   Предназначен для избежания дополнительного HTTP-запроса:
+   https://www.phpied.com/delay-loading-your-print-css/
+   ========================================================================== */
+
+@media print {
+  *,
+  *:before,
+  *:after {
+    background: transparent !important;
+    color: #000 !important;
+    /* Черные отпечатки быстрее */
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+
+  /*
+     * Не показывать ссылки, которые являются идентификаторами фрагментов,
+     * или используйте псевдопротокол `javascript:`
+     */
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+
+  pre {
+    white-space: pre-wrap !important;
+  }
+
+  pre,
+  blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+
+  /*
+     * Таблицы печати:
+     * https://web.archive.org/web/20180815150934/http://css-discuss.incutio.com/wiki/Printing_Tables
+     */
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  img {
+    page-break-inside: avoid;
+  }
+
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}
+

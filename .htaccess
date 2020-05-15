@@ -1,0 +1,1217 @@
+# Apache Server Configs v3.2.1 | Лицензия MIT
+# https://github.com/h5bp/server-configs-apache
+
+# (!) Использование файлов `.htaccess` замедляет работу Apache, поэтому, если у вас есть
+# доступ к главному файлу конфигурации сервера (который обычно называется
+# `httpd.conf`), вы должны добавить эту логику туда.
+#
+# https://httpd.apache.org/docs/current/howto/htaccess.html
+
+# ######################################################################
+# # CROSS-ORIGIN                                                       #
+# ######################################################################
+
+# ----------------------------------------------------------------------
+# | Cross-origin requests                                              |
+# ----------------------------------------------------------------------
+
+# Разрешить перекрестные запросы.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
+# https://enable-cors.org/
+# https://www.w3.org/TR/cors/
+
+# <IfModule mod_headers.c>
+#     Header set Access-Control-Allow-Origin "*"
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Изображения перекрестного происхождения                            |
+# ----------------------------------------------------------------------
+
+# Отправьте заголовок CORS для изображений, когда браузер запросит его.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
+# https://blog.chromium.org/2011/07/using-cross-domain-images-in-webgl-and.html
+
+<IfModule mod_setenvif.c>
+    <IfModule mod_headers.c>
+        <FilesMatch "\.(bmp|cur|gif|ico|jpe?g|png|svgz?|webp)$">
+            SetEnvIf Origin ":" IS_CORS
+            Header set Access-Control-Allow-Origin "*" env=IS_CORS
+        </FilesMatch>
+    </IfModule>
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Веб-шрифты кросс-происхождения                                     |
+# ----------------------------------------------------------------------
+
+# Разрешить перекрестный доступ к веб-шрифтам.
+#
+# https://developers.google.com/fonts/docs/troubleshooting
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(eot|otf|tt[cf]|woff2?)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Сроки происхождения ресурсов                                       |
+# ----------------------------------------------------------------------
+
+# Разрешить перекрестный доступ к информации о синхронизации для всех ресурсов.
+#
+# Если ресурс не обслуживается с заголовком `Timing-Allow-Origin`, который
+# позволит передавать информацию о времени в документ,
+# некоторые атрибуты объекта `PerformanceResourceTiming` будут
+# быть установлен на ноль.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Timing-Allow-Origin
+# https://www.w3.org/TR/resource-timing/
+# https://www.stevesouders.com/blog/2014/08/21/resource-timing-practical-tips/
+
+# <IfModule mod_headers.c>
+#     Header set Timing-Allow-Origin: "*"
+# </IfModule>
+
+# ######################################################################
+# # ОШИБКИ                                                             #
+# ######################################################################
+
+# ----------------------------------------------------------------------
+# | Пользовательские сообщения об ошибках / страницы                   |
+# ----------------------------------------------------------------------
+
+# Настройте то, что Apache возвращает клиенту в случае ошибки.
+#
+# https://httpd.apache.org/docs/current/mod/core.html#errordocument
+
+ErrorDocument 404 /404.html
+
+# ----------------------------------------------------------------------
+# | Предотвращение ошибок                                              |
+# ----------------------------------------------------------------------
+
+# Предотвращение ошибокОтключение сопоставления с образцом на основе имен файлов.
+#
+# Этот параметр запрещает Apache возвращать ошибку 404 в результате
+# переписать, когда каталог с таким именем не существует.
+#
+# https://httpd.apache.org/docs/current/content-negotiation.html#multiviews
+
+Options -MultiViews
+
+# ######################################################################
+# # ИНТЕРНЕТ ЭКСПЛОРЕР                                                 #
+# ######################################################################
+
+# ----------------------------------------------------------------------
+# | Режимы документа                                                   |
+# ----------------------------------------------------------------------
+
+# Принудительно Internet Explorer 8/9/10 для отображения страниц в самом высоком режиме
+# доступно в различных случаях, когда это возможно.
+#
+# https://hsivonen.fi/doctype/#ie8
+#
+# (!) Начиная с Internet Explorer 11, режимы документов устарели.
+# Если ваш бизнес по-прежнему опирается на старые веб-приложения и службы, которые были
+# предназначен для более старых версий Internet Explorer, вы можете
+# рассмотрите возможность включения «Enterprise Mode» во всей вашей компании.
+#
+# https://msdn.microsoft.com/en-us/library/ie/bg182625.aspx#docmode
+# https://blogs.msdn.microsoft.com/ie/2014/04/02/stay-up-to-date-with-enterprise-mode-for-internet-explorer-11/
+# https://msdn.microsoft.com/en-us/library/ff955275.aspx
+
+<IfModule mod_headers.c>
+    Header set X-UA-Compatible "IE=edge" "expr=%{CONTENT_TYPE} =~ m#text/html#i"
+</IfModule>
+
+# ######################################################################
+# # ВИДЫ МЕДИА И КОДИРОВКИ ХАРАКТЕРОВ                                  #
+# ######################################################################
+
+# ----------------------------------------------------------------------
+# | Типы носителей                                                     |
+# ----------------------------------------------------------------------
+
+# Служите ресурсам с правильными типами носителей (например, MIME-типы).
+#
+# https://www.iana.org/assignments/media-types/media-types.xhtml
+# https://httpd.apache.org/docs/current/mod/mod_mime.html#addtype
+
+<IfModule mod_mime.c>
+
+  # Обмен данными
+
+    AddType application/atom+xml                        atom
+    AddType application/json                            json map topojson
+    AddType application/ld+json                         jsonld
+    AddType application/rss+xml                         rss
+    AddType application/geo+json                        geojson
+    AddType application/rdf+xml                         rdf
+    AddType application/xml                             xml
+
+
+  # JavaScript
+
+    # Серверы должны использовать текст / JavaScript для ресурсов JavaScript.
+    # https://html.spec.whatwg.org/multipage/scripting.html#scriptingLanguages
+
+    AddType text/javascript                             js mjs
+
+
+  # Файлы манифеста
+
+    AddType application/manifest+json                   webmanifest
+    AddType application/x-web-app-manifest+json         webapp
+    AddType text/cache-manifest                         appcache
+
+
+  # Медиа файлы
+
+    AddType audio/mp4                                   f4a f4b m4a
+    AddType audio/ogg                                   oga ogg opus
+    AddType image/bmp                                   bmp
+    AddType image/svg+xml                               svg svgz
+    AddType image/webp                                  webp
+    AddType video/mp4                                   f4v f4p m4v mp4
+    AddType video/ogg                                   ogv
+    AddType video/webm                                  webm
+    AddType video/x-flv                                 flv
+
+    # Обслуживание файлов изображений `.ico` с другим типом медиа
+    # не позволяет Internet Explorer отображать их в виде изображений:
+    # https://github.com/h5bp/html5-boilerplate/commit/37b5fec090d00f38de64b591bcddcb205aadf8ee
+
+    AddType image/x-icon                                cur ico
+
+
+  # WebAssembly
+
+    AddType application/wasm                            wasm
+
+
+  # Веб-шрифты
+
+    AddType font/woff                                   woff
+    AddType font/woff2                                  woff2
+    AddType application/vnd.ms-fontobject               eot
+    AddType font/ttf                                    ttf
+    AddType font/collection                             ttc
+    AddType font/otf                                    otf
+
+
+  # Другое
+
+    AddType application/octet-stream                    safariextz
+    AddType application/x-bb-appworld                   bbaw
+    AddType application/x-chrome-extension              crx
+    AddType application/x-opera-extension               oex
+    AddType application/x-xpinstall                     xpi
+    AddType text/calendar                               ics
+    AddType text/markdown                               markdown md
+    AddType text/vcard                                  vcard vcf
+    AddType text/vnd.rim.location.xloc                  xloc
+    AddType text/vtt                                    vtt
+    AddType text/x-component                            htc
+
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Кодировки символов                                                 |
+# ----------------------------------------------------------------------
+
+# Обслуживать все ресурсы, помеченные как `text / html` или` text / plain`
+# с параметром типа носителя `charset`, установленным в` UTF-8`.
+#
+# https://httpd.apache.org/docs/current/mod/core.html#adddefaultcharset
+
+AddDefaultCharset utf-8
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Подавать файлы следующих типов с типом медиа `charset`
+# параметр установлен в `UTF-8`.
+#
+# https://httpd.apache.org/docs/current/mod/mod_mime.html#addcharset
+
+<IfModule mod_mime.c>
+    AddCharset utf-8 .appcache \
+                     .bbaw \
+                     .css \
+                     .htc \
+                     .ics \
+                     .js \
+                     .json \
+                     .manifest \
+                     .map \
+                     .markdown \
+                     .md \
+                     .mjs \
+                     .topojson \
+                     .vtt \
+                     .vcard \
+                     .vcf \
+                     .webmanifest \
+                     .xloc
+</IfModule>
+
+# ######################################################################
+# # Переписывает                                                       #
+# ######################################################################
+
+# ----------------------------------------------------------------------
+# | Переписать движок                                                  |
+# ----------------------------------------------------------------------
+
+# (1) Включите механизм перезаписи (это необходимо для
+# директивы `RewriteRule` для работы).
+#
+# https://httpd.apache.org/docs/current/mod/mod_rewrite.html#RewriteEngine
+#
+# (2) Включите опцию `FollowSymLinks`, если это еще не сделано.
+#
+# https://httpd.apache.org/docs/current/mod/core.html#options
+#
+# (3) Если ваш веб-хостинг не поддерживает опцию FollowSymlinks,
+# Вы должны закомментировать или удалить его, а затем раскомментировать
+# строка `Options + SymLinksIfOwnerMatch` (4), но помните
+# влияния на производительность.
+#
+# https://httpd.apache.org/docs/current/misc/perf-tuning.html#symlinks
+#
+# (4) Для некоторых служб облачного хостинга вам потребуется установить `RewriteBase`.
+#
+# https://www.rackspace.com/knowledge_center/frequently-asked-question/why-is-modrewrite-not-working-on-my-site
+# https://httpd.apache.org/docs/current/mod/mod_rewrite.html#rewritebase
+#
+# (5) В зависимости от того, как настроен ваш сервер, вам также может понадобиться
+# используйте директиву `RewriteOptions`, чтобы включить некоторые опции для
+# переписать движок.
+#
+# https://httpd.apache.org/docs/current/mod/mod_rewrite.html#rewriteoptions
+#
+# (6) Установите переменную% {ENV: PROTO}, чтобы разрешить перенаправления перезаписи с помощью
+# соответствующая схема автоматически (http или https).
+
+<IfModule mod_rewrite.c>
+
+    # (1)
+    RewriteEngine On
+
+    # (2)
+    Options +FollowSymlinks
+
+    # (3)
+    # Options +SymLinksIfOwnerMatch
+
+    # (4)
+    # RewriteBase /
+
+    # (5)
+    # RewriteOptions <options>
+
+    # (6)
+    RewriteCond %{HTTPS} =on
+    RewriteRule ^ - [env=proto:https]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ - [env=proto:http]
+
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Forcing `https://`                                                 |
+# ----------------------------------------------------------------------
+
+# Перенаправить с `http: //` на версию URL https: // `.
+#
+# https://wiki.apache.org/httpd/RewriteHTTPToHTTPS
+
+# (1) Если вы используете cPanel AutoSSL или веб-корень Let's Encrypt
+# метод, он не сможет проверить сертификат, если проверка
+# запросы перенаправляются на HTTPS. Включите условие (я)
+# тебе нужно.
+#
+# https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml
+# https://tools.ietf.org/html/draft-ietf-acme-acme-12
+
+# <IfModule mod_rewrite.c>
+#    RewriteEngine On
+#    RewriteCond %{HTTPS} !=on
+#    # (1)
+#    # RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+#    # RewriteCond %{REQUEST_URI} !^/\.well-known/cpanel-dcv/[\w-]+$
+#    # RewriteCond %{REQUEST_URI} !^/\.well-known/pki-validation/[A-F0-9]{32}\.txt(?:\ Comodo\ DCV)?$
+#    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Подавление `www.` в начале URL                                     |
+# ----------------------------------------------------------------------
+
+# Перепишите www.example.com → example.com
+
+# Один и тот же контент никогда не должен быть доступен под двумя разными
+# URL, особенно не с и без `www.` в начале.
+# Это может вызвать проблемы с SEO (дублированный контент), и, следовательно,
+# вы должны выбрать одну из альтернатив и перенаправить другую
+# один.
+#
+# (!) НИКОГДА НЕ ИСПОЛЬЗУЙТЕ ОБОИХ СВЯЗАННЫХ С WWW ПРАВИЛАМИ!
+
+# (1) Правило по умолчанию предполагает, что HTTP и HTTPS
+# среды доступны для перенаправления.
+# Если ваш SSL-сертификат не может обработать один из доменов
+# используется во время перенаправления, вы должны включить условие.
+#
+# https://github.com/h5bp/server-configs-apache/issues/52
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # (1)
+    # RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ %{ENV:PROTO}://%1%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Принудительное использование `www.` в начале URL                   |
+# ----------------------------------------------------------------------
+
+# Перепишите example.com → www.example.com
+
+# Один и тот же контент никогда не должен быть доступен под двумя разными
+# URL, особенно не с и без `www.` в начале.
+# Это может вызвать проблемы с SEO (дублированный контент), и, следовательно,
+# вы должны выбрать одну из альтернатив и перенаправить другую
+# один.
+#
+# (!) НИКОГДА НЕ ИСПОЛЬЗУЙТЕ ОБОИХ СВЯЗАННЫХ С WWW ПРАВИЛАМИ!
+
+# (1) Правило по умолчанию предполагает, что HTTP и HTTPS
+# среды доступны для перенаправления.
+# Если ваш SSL-сертификат не может обработать один из доменов
+# используется во время перенаправления, вы должны включить условие.
+#
+# https://github.com/h5bp/server-configs-apache/issues/52
+
+# Имейте в виду, что следующее не может быть хорошей идеей, если вы используете «реальный»
+# поддоменов для определенных частей вашего сайта.
+
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     # (1)
+#     # RewriteCond %{HTTPS} !=on
+#     RewriteCond %{HTTP_HOST} !^www\. [NC]
+#     RewriteCond %{SERVER_ADDR} !=127.0.0.1
+#     RewriteCond %{SERVER_ADDR} !=::1
+#     RewriteRule ^ %{ENV:PROTO}://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# </IfModule>
+
+# ######################################################################
+# # БЕЗОПАСНОСТЬ                                                       #
+# ######################################################################
+
+# ----------------------------------------------------------------------
+# | Clickjacking                                                       |
+# ----------------------------------------------------------------------
+
+# Защита сайта от кликджекинга.
+#
+# Пример ниже отправляет заголовок ответа `X-Frame-Options` с
+# значение `DENY`, информирующее браузеры не отображать содержимое
+# веб-страница в любом фрейме.
+#
+# Это может быть не лучшим выбором для всех. Вы должны прочитать
+# о двух других возможных значениях заголовка `X-Frame-Options`
+Поле # может иметь: `SAMEORIGIN` и` ALLOW-FROM`.
+# https://tools.ietf.org/html/rfc7034#section-2.1.
+#
+# Имейте в виду, что пока вы можете отправить заголовок `X-Frame-Options`
+# для всех страниц вашего сайта, это может иметь
+# запрещает даже не злонамеренное создание вашего контента (например, когда
+# пользователи посещают ваш сайт с помощью страницы результатов поиска картинок Google).
+#
+# Тем не менее, вы должны убедиться, что отправляете `X-Frame-Options`
+# заголовок для всех страниц, которые позволяют пользователю изменять состояние
+# операция (например, страницы, содержащие ссылки на покупку в один клик, оформить заказ
+# или страницы подтверждения банковского перевода, страницы, которые делают постоянными
+# изменения конфигурации и т. д.).
+#
+# Отправка заголовка `X-Frame-Options` также может защитить ваш сайт
+# против не только атак с помощью кликджекинга:
+# https://cure53.de/xfo-clickjacking.pdf.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+# https://tools.ietf.org/html/rfc7034
+# https://blogs.msdn.microsoft.com/ieinternals/2010/03/30/combating-clickjacking-with-x-frame-options/
+# https://www.owasp.org/index.php/Clickjacking
+
+# <IfModule mod_headers.c>
+#     Header set X-Frame-Options "DENY" "expr=%{CONTENT_TYPE} =~ m#text/html#i"
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Политика безопасности контента (CSP)                               |
+# ----------------------------------------------------------------------
+
+# Снижение риска межсайтового скриптинга и других инъекций контента.
+# атаки.
+#
+# Это можно сделать, установив «Политику безопасности контента», которая
+# белые списки доверенных источников контента для вашего сайта.
+#
+# Нет политики, подходящей для всех сайтов, вам придется изменить
+# директивы Content-Security-Policy в следующем примере, в зависимости
+# на ваши нужды.
+#
+# Пример политики ниже нацелен на:
+#
+# (1) Ограничить все выборки по умолчанию источником текущего сайта
+# установив директиву default-src на self, которая действует как
+# откат ко всем «директивам извлечения» (https://developer.mozilla.org/en-US/docs/Glossary/Fetch_directive).
+#
+# Это удобно, так как вам не нужно указывать все директивы Fetch
+# которые относятся к вашему сайту, например:
+# `connect-src 'self'; font-src 'self'; script-src 'self'; style-src 'self'` и др.
+#
+# Это ограничение также означает, что вы должны явно определить из
+# с какого сайта (-ов) ваш сайт может загружать ресурсы.
+#
+# (2) Элемент `<base>` не разрешен на веб-сайте. Это к
+# препятствовать злоумышленникам изменять расположение загруженных ресурсов
+# из относительных URL.
+#
+# Если вы хотите использовать элемент `<base>`, то `base-uri 'self'`
+# можно использовать вместо.
+#
+# (3) Отправка форм допускается только с текущего сайта
+# setting: `form-action 'self'`.
+#
+# (4) Запрещает всем веб-сайтам (включая ваш собственный) встраивать ваши
+# веб-страниц, например, элемент `<iframe>` или `<object>`
+# установка `frame-ancestors 'none'`.
+#
+# Директива frame-ancestors помогает избежать атак "Clickjacking"
+# и похож на заголовок `X-Frame-Options`.
+#
+# Браузеры, которые поддерживают заголовок CSP, будут игнорировать `X-Frame-Options`
+# если также указан `frame-ancestors`.
+#
+# (5) Заставляет браузер обрабатывать все ресурсы, которые обслуживаются
+# HTTP, как если бы они были безопасно загружены через HTTPS, установив
+# Директива # `upgrade-insecure-запросы`.
+#
+# Обратите внимание, что `upgrade-insecure-запросы` не гарантирует
+# HTTPS для навигации верхнего уровня. Если вы хотите, чтобы заставить
+# Сам сайт должен быть загружен через HTTPS, вы должны включить
+# Заголовок # `Strict-Transport-Security`.
+#
+# Чтобы упростить реализацию CSP, вы можете использовать онлайн-заголовок CSP
+# генератор, такой как:
+# https://report-uri.com/home/generate/
+#
+# Рекомендуется проверить заголовок CSP с помощью средства проверки CSP
+# такие как:
+# https://csp-evaluator.withgoogle.com
+#
+# https://csp.withgoogle.com/docs/
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
+# https://www.html5rocks.com/en/tutorials/security/content-security-policy/
+# https://www.w3.org/TR/CSP/
+
+# <IfModule mod_headers.c>
+#     #                                   (1)                 (2)              (3)                 (4)                     (5)
+#     Header set Content-Security-Policy "default-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" "expr=%{CONTENT_TYPE} =~ m#text/html#i"
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Доступ к файлу                                                     |
+# ----------------------------------------------------------------------
+
+# Блокировать доступ к каталогам без документа по умолчанию.
+#
+# Вы должны оставить следующее без комментариев, так как вы не должны позволять
+# любой, кто просматривает все каталоги на вашем сервере (что может
+# включает в себя довольно приватные места, такие как каталоги CMS).
+
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Блокировать доступ ко всем скрытым файлам и каталогам, за исключением
+# видимый контент из скрытого каталога `/ .well-known /`.
+#
+# Эти типы файлов обычно содержат пользовательские настройки или сохранены
+# состояние утилиты, и может включать в себя довольно частные места, такие как, для
+# Например, каталоги `.git` или` .svn`.
+#
+# Каталог `/ .well-known /` представляет стандартный путь (RFC 5785)
+# префикс для "общеизвестных местоположений" (например: `/ .well-known / manifest.json`,
+# `/ .well-known / keybase.txt`) и, следовательно, доступ к его видимым
+# контент не должен быть заблокирован.
+#
+# https://www.mnot.net/blog/2010/04/07/well-known
+# https://tools.ietf.org/html/rfc5785
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} "!(^|/)\.well-known/([^./]+./?)+$" [NC]
+    RewriteCond %{SCRIPT_FILENAME} -d [OR]
+    RewriteCond %{SCRIPT_FILENAME} -f
+    RewriteRule "(^|/)\." - [F]
+</IfModule>
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Блокировать доступ к файлам, которые могут раскрыть конфиденциальную информацию.
+# По умолчанию блокировать доступ к файлам резервных копий и исходным файлам, которые могут быть
+# оставлено некоторыми текстовыми редакторами и может представлять угрозу безопасности, когда кто-либо
+# имеет к ним доступ.
+#
+# https://feross.org/cmsploit/
+#
+# (!) Обновите регулярное выражение `<FilesMatch>` снизу до
+# включить любые файлы, которые могут оказаться на вашем рабочем сервере и
+# может предоставлять конфиденциальную информацию о вашем сайте. Эти файлы могут
+# include: файлы конфигурации, файлы, которые содержат метаданные о
+# проект (например, зависимости проекта), сценарии сборки и т. д.
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "(^#.*#|\.(bak|conf|dist|fla|in[ci]|log|orig|psd|sh|sql|sw[op])|~)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | HTTP Строгая Транспортная Безопасность (HSTS)                          |
+# ----------------------------------------------------------------------
+
+# Принудительное перенаправление SSL на стороне клиента.
+#
+# Если пользователь вводит `example.com` в своем браузере, даже если сервер
+# перенаправляет их на безопасную версию сайта, которая все еще оставляет
+# окно возможности (начальное соединение HTTP) для злоумышленника
+# чтобы понизить или перенаправить запрос.
+#
+# Следующий заголовок гарантирует, что браузер будет подключаться только к вашему
+# сервер через HTTPS, независимо от того, что пользователи вводят в браузере
+# Адресная строка.
+#
+# (!) Имейте в виду, что после публикации это не может быть отменено, и вы должны убедиться, что
+# возможность обслуживания сайта через SSL в течение указанного вами периода
+# в максимальном возрасте. Если у вас нет действующего соединения SSL (больше), ваш
+# посетители увидят неприятное сообщение об ошибке даже при попытке подключения
+# через простой HTTP.
+#
+# (!) Удалите необязательную директиву `includeSubDomains`, если веб-сайт
+# субдомены не используют HTTPS.
+#
+# (1) Если вы хотите отправить свой сайт для предварительной загрузки HSTS (2), вы должны
+# * обеспечить присутствие директивы includeSubDomains`
+# * директива `preload` должна быть указана
+# * максимальный возраст должен составлять не менее 31536000 секунд (1 год) в соответствии с текущим статусом.
+#
+# Также рекомендуется (3) обслуживать только заголовок HSTS через безопасное соединение
+# что можно сделать с помощью `env = https` или` "expr =% {HTTPS} == 'on'" `(4).
+# Точный путь зависит от вашей среды и может быть просто испробован.
+#
+# (2) https://hstspreload.org/
+# (3) https://tools.ietf.org/html/rfc6797#section-7.2
+# (4) https://stackoverflow.com/questions/24144552/how-to-set-hsts-header-from-htaccess-only-on-https/24145033#comment81632711_24145033
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+# https://tools.ietf.org/html/rfc6797#section-6.1
+# https://www.html5rocks.com/en/tutorials/security/transport-layer-security/
+# https://blogs.msdn.microsoft.com/ieinternals/2014/08/18/strict-transport-security/
+
+# <IfModule mod_headers.c>
+#     Header always set Strict-Transport-Security "max-age=16070400; includeSubDomains"
+#     # (1) or if HSTS preloading is desired (respect (2) for current requirements):
+#     # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=HTTPS
+#     # (4) respectively… (respect (2) for current requirements):
+#     # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" "expr=%{HTTPS} == 'on'"
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Снижение рисков безопасности MIME-типа                             |
+# ----------------------------------------------------------------------
+
+# Запретить некоторым браузерам MIME-сниффинг ответа.
+#
+# Это уменьшает подверженность атакам при загрузке с диска и перекрестному происхождению
+# утечки данных, и должны быть оставлены без комментариев, особенно если сервер
+# обслуживает загруженный пользователем контент или контент, который потенциально может быть
+# рассматривается как исполняемый браузером.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+# https://blogs.msdn.microsoft.com/ie/2008/07/02/ie8-security-part-v-comprehensive-protection/
+# https://mimesniff.spec.whatwg.org/
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Отраженные межсайтовые сценарии (XSS) атаки                        |
+# ----------------------------------------------------------------------
+
+# (1) Попробуйте снова включить встроенный фильтр межсайтовых скриптов (XSS)
+# в большинстве веб-браузеров.
+#
+# Фильтр обычно включен по умолчанию, но в некоторых случаях он
+# может быть отключен пользователем. Однако в Internet Explorer для
+# пример, его можно снова включить, просто отправив
+Заголовок # `X-XSS-Protection` со значением` 1`.
+#
+# (2) Запретить веб-браузерам отображать веб-страницу, если это возможно
+# отраженный (a.k.a непостоянный) XSS-атака обнаружена
+# фильтр.
+#
+# По умолчанию, если фильтр включен и браузеры обнаруживают
+# отразил атаку XSS, они попытаются заблокировать атаку
+# делая наименьшие возможные модификации возвращаемого
+#     страница в Интернете.
+#
+# К сожалению, в некоторых браузерах (например, Internet Explorer),
+# это поведение по умолчанию может позволить использовать фильтр XSS,
+# тем самым, лучше предупредить браузеры, чтобы предотвратить рендеринг
+# страницы в целом, вместо того, чтобы пытаться изменить ее.
+#
+# https://hackademix.net/2009/11/21/ies-xss-filter-creates-xss-vulnerabilities
+#
+# (!) Не полагайтесь на фильтр XSS для предотвращения атак XSS! Обеспечить, что
+# вы принимаете все возможные меры для предотвращения атак XSS,
+# наиболее очевидное: проверка и дезинфекция входных данных вашего сайта.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+# https://blogs.msdn.microsoft.com/ie/2008/07/02/ie8-security-part-iv-the-xss-filter/
+# https://blogs.msdn.microsoft.com/ieinternals/2011/01/31/controlling-the-xss-filter/
+# https://www.owasp.org/index.php/Cross-site_Scripting_%28XSS%29
+
+# <IfModule mod_headers.c>
+#     #                           (1)    (2)
+#     Header set X-XSS-Protection "1; mode=block" "expr=%{CONTENT_TYPE} =~ m#text/html#i"
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Политика реферера                                                  |
+# ----------------------------------------------------------------------
+
+# Веб-приложение использует HTTPS и идентификатор сеанса на основе URL.
+# Веб-приложение может захотеть ссылаться на HTTPS-ресурсы на других
+# веб-сайты без утечки идентификатора сеанса пользователя в URL.
+#
+# Это можно сделать, установив «политику реферера», которая
+# белые списки доверенных источников контента для вашего сайта.
+#
+# Чтобы проверить политику рефералов, вы можете использовать онлайн-сервис
+# таких как: https://securityheaders.io/.
+#
+# https://scotthelme.co.uk/a-new-security-header-referrer-policy/
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+
+# <IfModule mod_headers.c>
+#     # no-referrer-when-downgrade (default)
+#     # This should be the user agent's default behavior if no policy is
+#     # specified.The origin is sent as referrer to a-priori as-much-secure
+#     # destination (HTTPS->HTTPS), but isn't sent to a less secure destination
+#     # (HTTPS->HTTP).
+#     Header set Referrer-Policy "no-referrer-when-downgrade" "expr=%{CONTENT_TYPE} =~ m#text/html#i"
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Отключить метод TRACE HTTP                                         |
+# ----------------------------------------------------------------------
+
+# Запретить Apache отвечать на HTTP-запрос TRACE.
+#
+# Метод TRACE, хотя и безвредный, но может быть успешно
+# использование в некоторых сценариях для кражи учетных данных законных пользователей
+#
+# Современные браузеры теперь предотвращают выполнение запросов TRACE через JavaScript,
+# Однако другие способы отправки запросов TRACE с помощью браузеров были
+# обнаружено, например, с использованием Java.
+#
+# (!) Директива TraceEnable будет работать только на главном сервере
+# файл конфигурации, поэтому не пытайтесь включить его в файле `.htaccess`!
+#
+# https://tools.ietf.org/html/rfc7231#section-4.3.8
+# https://www.owasp.org/index.php/Cross_Site_Tracing
+# https://www.owasp.org/index.php/Test_HTTP_Methods_(OTG-CONFIG-006)
+# https://httpd.apache.org/docs/current/mod/core.html#traceenable
+
+# TraceEnable Off
+
+# ----------------------------------------------------------------------
+# | Информация о технологии на стороне сервера                         |
+# ----------------------------------------------------------------------
+
+# Удалите заголовок ответа `X-Powered-By`, который:
+#
+# * устанавливается некоторыми фреймворками и языками на стороне сервера
+# (например, ASP.NET, PHP), и его значение содержит информацию
+# о них (например: их имя, номер версии)
+#
+# * не имеет значения для пользователей, добавляет заголовок
+# раздувать, а в некоторых случаях информация, которую он предоставляет, может
+# выявить уязвимости
+#
+# (!) Если вы можете, вы должны отключить заголовок `X-Powered-By` из
+# уровень языка / фреймворка (например, для PHP вы можете сделать это, установив
+# `expose_php = off` в` php.ini`)
+#
+# https://php.net/manual/en/ini.core.php#ini.expose-php
+
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Информация о программном обеспечении сервера                       |
+# ----------------------------------------------------------------------
+
+# Запретить Apache добавлять строку нижнего колонтитула, содержащую
+# информация о сервере к серверным документам
+# (например, сообщения об ошибках, списки каталогов и т. д.)
+#
+# https://httpd.apache.org/docs/current/mod/core.html#serversignature
+
+ServerSignature Off
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Запретить Apache отправлять в заголовке ответа `Server` свой
+# точный номер версии, описание общего типа ОС или
+# информация о его скомпилированных модулях.
+#
+# (!) Директива ServerTokens будет работать только на главном сервере
+# файл конфигурации, поэтому не пытайтесь включить его в файле `.htaccess`!
+#
+# https://httpd.apache.org/docs/current/mod/core.html#servertokens
+
+# ServerTokens Prod
+
+# ######################################################################
+# # Веб-производительность                                             #
+# ######################################################################
+
+# ----------------------------------------------------------------------
+# | Компрессия                                                         |
+# ----------------------------------------------------------------------
+
+<IfModule mod_deflate.c>
+
+    # Принудительное сжатие для искаженных заголовков запроса `Accept-Encoding`
+    #
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+    # https://calendar.perfplanet.com/2010/pushing-beyond-gzipping/
+
+    <IfModule mod_setenvif.c>
+        <IfModule mod_headers.c>
+            SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
+            RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
+        </IfModule>
+    </IfModule>
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    # Сожмите все выходные данные, помеченные одним из следующих типов носителей.
+    #
+    # https://httpd.apache.org/docs/current/mod/mod_filter.html#addoutputfilterbytype
+
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE "application/atom+xml" \
+                                      "application/javascript" \
+                                      "application/json" \
+                                      "application/ld+json" \
+                                      "application/manifest+json" \
+                                      "application/rdf+xml" \
+                                      "application/rss+xml" \
+                                      "application/schema+json" \
+                                      "application/geo+json" \
+                                      "application/vnd.ms-fontobject" \
+                                      "application/wasm" \
+                                      "application/x-font-ttf" \
+                                      "application/x-javascript" \
+                                      "application/x-web-app-manifest+json" \
+                                      "application/xhtml+xml" \
+                                      "application/xml" \
+                                      "font/eot" \
+                                      "font/opentype" \
+                                      "font/otf" \
+                                      "image/bmp" \
+                                      "image/svg+xml" \
+                                      "image/vnd.microsoft.icon" \
+                                      "text/cache-manifest" \
+                                      "text/calendar" \
+                                      "text/css" \
+                                      "text/html" \
+                                      "text/javascript" \
+                                      "text/plain" \
+                                      "text/markdown" \
+                                      "text/vcard" \
+                                      "text/vnd.rim.location.xloc" \
+                                      "text/vtt" \
+                                      "text/x-component" \
+                                      "text/x-cross-domain-policy" \
+                                      "text/xml"
+
+    </IfModule>
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    # Сопоставить следующие расширения имени файла с указанным
+    # тип кодировки, чтобы Apache обслуживал типы файлов
+    # с соответствующим заголовком ответа `Content-Encoding`
+    # (учтите, что это не заставит Apache их сжимать!).
+    #
+    # Если эти типы файлов будут обслуживаться без соответствующего
+    # `Content-Enable` заголовок ответа, клиентские приложения (например:
+    # браузеры) не будет знать, что сначала нужно распаковать
+    # ответ, и, следовательно, не сможет понять
+    # содержание.
+    #
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding
+    # https://httpd.apache.org/docs/current/mod/mod_mime.html#addencoding
+
+    <IfModule mod_mime.c>
+        AddEncoding gzip              svgz
+    </IfModule>
+
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Бротли предварительно сжатый контент                               |
+# ----------------------------------------------------------------------
+
+# Подавать brotli сжатые файлы CSS, JS, HTML, SVG, ICS и JSON
+# если они существуют и если клиент принимает кодировку br.
+#
+# (!) Чтобы сделать эту часть актуальной, вам нужно сгенерировать закодированный
+# файлы по вашему усмотрению. Включение этой части не приведет к автоматической генерации
+# брошенные файлы.
+#
+# Обратите внимание, что некоторые клиенты (например, браузеры) требуют безопасного соединения
+# запрашивать сжатые по-братски ресурсы.
+# https://www.chromestatus.com/feature/5420797577396224
+#
+# https://httpd.apache.org/docs/current/mod/mod_brotli.html#precompressed
+
+# <IfModule mod_headers.c>
+
+#     RewriteCond %{HTTP:Accept-Encoding} br
+#     RewriteCond %{REQUEST_FILENAME}\.br -f
+#     RewriteRule \.(css|ics|js|json|html|svg)$ %{REQUEST_URI}.br [L]
+
+#     # Prevent mod_deflate double gzip
+#     RewriteRule \.br$ - [E=no-gzip:1]
+
+#     <FilesMatch "\.br$">
+
+#         <IfModule mod_mime.c>
+#             # Serve correct content types
+#             AddType text/css              css.br
+#             AddType text/calendar         ics.br
+#             AddType text/javascript       js.br
+#             AddType application/json      json.br
+#             AddType text/html             html.br
+#             AddType image/svg+xml         svg.br
+
+#             # Serve correct content charset
+#             AddCharset utf-8 .css.br \
+#                              .ics.br \
+#                              .js.br \
+#                              .json.br
+#         </IfModule>
+
+#         # Принудительное использование прокси-серверов для кэширования раздробленных и небросковых файлов по отдельности
+#         Header append Vary Accept-Encoding
+
+#     </FilesMatch>
+
+#     # Подать правильный тип кодировки
+#     AddEncoding br .br
+
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | GZip предварительно сжатый контент                                 |
+# ----------------------------------------------------------------------
+
+# Обслуживание сжатых gzip файлов CSS, JS, HTML, SVG, ICS и JSON
+# если они существуют и если клиент принимает кодировку gzip.
+#
+# (!) Чтобы сделать эту часть актуальной, вам нужно сгенерировать закодированный
+# файлы по вашему усмотрению. Включение этой части не приведет к автоматической генерации
+# gziped файлы.
+#
+# https://httpd.apache.org/docs/current/mod/mod_deflate.html#precompressed
+#
+# (1)
+# Удаление MIME-типа по умолчанию для файлов .gz, позволяющих добавлять пользовательские
+# подтипы.
+# Вы можете предпочесть использовать менее общие расширения, такие как .html_gz в
+# чтобы сохранить поведение по умолчанию для файлов .gz.
+# https://httpd.apache.org/docs/current/mod/mod_mime.html#removetype
+
+# <IfModule mod_headers.c>
+
+#     RewriteCond %{HTTP:Accept-Encoding} gzip
+#     RewriteCond %{REQUEST_FILENAME}\.gz -f
+#     RewriteRule \.(css|ics|js|json|html|svg)$ %{REQUEST_URI}.gz [L]
+
+#     # Prevent mod_deflate double gzip
+#     RewriteRule \.gz$ - [E=no-gzip:1]
+
+#     <FilesMatch "\.gz$">
+
+#         # Serve correct content types
+#         <IfModule mod_mime.c>
+#             # (1)
+#             RemoveType gz
+
+#             # Serve correct content types
+#             AddType text/css              css.gz
+#             AddType text/calendar         ics.gz
+#             AddType text/javascript       js.gz
+#             AddType application/json      json.gz
+#             AddType text/html             html.gz
+#             AddType image/svg+xml         svg.gz
+
+#             # Serve correct content charset
+#             AddCharset utf-8 .css.gz \
+#                              .ics.gz \
+#                              .js.gz \
+#                              .json.gz
+#         </IfModule>
+
+#         # Принудительное использование прокси для кэширования сжатых и незаархивированных файлов отдельно
+#         Header append Vary Accept-Encoding
+
+#     </FilesMatch>
+
+#     # Подать правильный тип кодировки
+#     AddEncoding gzip .gz
+
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Преобразование контента                                            |
+# ----------------------------------------------------------------------
+
+# Предотвращение промежуточных кэшей или прокси (например, таких как
+# используется операторами мобильной сети) от изменения веб-сайта
+# содержание.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+# https://tools.ietf.org/html/rfc2616#section-14.9.5
+#
+# (!) Если вы используете `mod_pagespeed`, обратите внимание, что настройка
+# заголовок ответа `Cache-Control: no-transform` предотвратит
+# `PageSpeed` от перезаписи` HTML` файлов, и, если
+# Директива # `ModPagespeedDisableRewriteOnNoTransform` не установлена
+# to `off`, также от переписывания других ресурсов.
+#
+# https://developers.google.com/speed/pagespeed/module/configuration#notransform
+
+# <IfModule mod_headers.c>
+#     Header merge Cache-Control "no-transform"
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | ETags                                                              |
+# ----------------------------------------------------------------------
+
+# Удалите `ETags`, поскольку ресурсы отправляются с заголовками истечения срока давности.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
+# https://developer.yahoo.com/performance/rules.html#etags
+# https://tools.ietf.org/html/rfc7232#section-2.3
+
+# FileETag None не работает во всех случаях.
+<IfModule mod_headers.c>
+    Header unset ETag
+</IfModule>
+
+FileETag None
+
+# ----------------------------------------------------------------------
+# | Срок действия кэша                                                 |
+# ----------------------------------------------------------------------
+
+# Служите ресурсам с давним сроком годности.
+#
+# (!) Если вы не контролируете управление версиями с помощью имени файла
+# разрушение кеша, вы должны рассмотреть возможность уменьшения времени кеша
+# на что-то вроде одной недели.
+#
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires
+# https://httpd.apache.org/docs/current/mod/mod_expires.html
+
+<IfModule mod_expires.c>
+
+    ExpiresActive on
+    ExpiresDefault                                      "access plus 1 month"
+
+  # CSS
+
+    ExpiresByType text/css                              "access plus 1 year"
+
+
+  # Data interchange
+
+    ExpiresByType application/atom+xml                  "access plus 1 hour"
+    ExpiresByType application/rdf+xml                   "access plus 1 hour"
+    ExpiresByType application/rss+xml                   "access plus 1 hour"
+
+    ExpiresByType application/json                      "access plus 0 seconds"
+    ExpiresByType application/ld+json                   "access plus 0 seconds"
+    ExpiresByType application/schema+json               "access plus 0 seconds"
+    ExpiresByType application/geo+json                  "access plus 0 seconds"
+    ExpiresByType application/xml                       "access plus 0 seconds"
+    ExpiresByType text/calendar                         "access plus 0 seconds"
+    ExpiresByType text/xml                              "access plus 0 seconds"
+
+
+  # Фавикон (нельзя переименовать!) И изображения курсора
+
+    ExpiresByType image/vnd.microsoft.icon              "access plus 1 week"
+    ExpiresByType image/x-icon                          "access plus 1 week"
+
+  # HTML
+
+    ExpiresByType text/html                             "access plus 0 seconds"
+
+
+  # JavaScript
+
+    ExpiresByType application/javascript                "access plus 1 year"
+    ExpiresByType application/x-javascript              "access plus 1 year"
+    ExpiresByType text/javascript                       "access plus 1 year"
+
+
+  # Файлы манифеста
+
+    ExpiresByType application/manifest+json             "access plus 1 week"
+    ExpiresByType application/x-web-app-manifest+json   "access plus 0 seconds"
+    ExpiresByType text/cache-manifest                   "access plus 0 seconds"
+
+
+  # Уценка
+
+    ExpiresByType text/markdown                         "access plus 0 seconds"
+
+
+  # Медиа файлы
+
+    ExpiresByType audio/ogg                             "access plus 1 month"
+    ExpiresByType image/bmp                             "access plus 1 month"
+    ExpiresByType image/gif                             "access plus 1 month"
+    ExpiresByType image/jpeg                            "access plus 1 month"
+    ExpiresByType image/png                             "access plus 1 month"
+    ExpiresByType image/svg+xml                         "access plus 1 month"
+    ExpiresByType image/webp                            "access plus 1 month"
+    ExpiresByType video/mp4                             "access plus 1 month"
+    ExpiresByType video/ogg                             "access plus 1 month"
+    ExpiresByType video/webm                            "access plus 1 month"
+
+
+  # WebAssembly
+
+    ExpiresByType application/wasm                      "access plus 1 year"
+
+
+  # Веб-шрифты
+
+    # Коллекция
+    ExpiresByType font/collection                       "access plus 1 month"
+
+    # Встроенный OpenType (EOT)
+    ExpiresByType application/vnd.ms-fontobject         "access plus 1 month"
+    ExpiresByType font/eot                              "access plus 1 month"
+
+    # OpenType
+    ExpiresByType font/opentype                         "access plus 1 month"
+    ExpiresByType font/otf                              "access plus 1 month"
+
+    # TrueType
+    ExpiresByType application/x-font-ttf                "access plus 1 month"
+    ExpiresByType font/ttf                              "access plus 1 month"
+
+    # Web Open Font Format (WOFF) 1.0
+    ExpiresByType application/font-woff                 "access plus 1 month"
+    ExpiresByType application/x-font-woff               "access plus 1 month"
+    ExpiresByType font/woff                             "access plus 1 month"
+
+    # Web Open Font Format (WOFF) 2.0
+    ExpiresByType application/font-woff2                "access plus 1 month"
+    ExpiresByType font/woff2                            "access plus 1 month"
+
+
+  # Другое
+
+    ExpiresByType text/x-cross-domain-policy            "access plus 1 week"
+
+</IfModule>
+
+# ----------------------------------------------------------------------
+# | Конкатенация файлов                                                |
+# ----------------------------------------------------------------------
+
+# Разрешить конкатенацию из определенных файлов.
+#
+# e.g.:
+#
+# Если в файле есть следующие строки, для
+# пример, `main.combined.js`:
+#
+#       <!--#include file="js/jquery.js" -->
+#       <!--#include file="js/jquery.timer.js" -->
+#
+# Apache заменит эти строки содержимым
+# указанные файлы.
+
+# <IfModule mod_include.c>
+
+#     <FilesMatch "\.combined\.js$">
+#         Options +Includes
+#         AddOutputFilterByType INCLUDES application/javascript \
+#                                        application/x-javascript \
+#                                        text/javascript
+#         SetOutputFilter INCLUDES
+#     </FilesMatch>
+
+#     <FilesMatch "\.combined\.css$">
+#         Options +Includes
+#         AddOutputFilterByType INCLUDES text/css
+#         SetOutputFilter INCLUDES
+#     </FilesMatch>
+
+# </IfModule>
+
+# ----------------------------------------------------------------------
+# | Очистка кэша на основе имени файла                                 |
+# ----------------------------------------------------------------------
+
+# Если вы не используете процесс сборки для управления версией вашего имени файла
+# revving, вы можете рассмотреть возможность включения следующих директив
+# для маршрутизации всех запросов, таких как `/ style.12345.css`, в` / style.css`.
+#
+# Чтобы понять, почему это важно и даже лучшее решение, чем
+# используя что-то вроде `* .css? v231`, смотрите:
+# https://www.stevesouders.com/blog/2008/08/23/revving-filenames-dont-use-querystring/
+
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{REQUEST_FILENAME} !-f
+#     RewriteRule ^(.+)\.(\w+)\.(bmp|css|cur|gif|ico|jpe?g|m?js|png|svgz?|webp|webmanifest)$ $1.$3 [L]
+# </IfModule>
+
